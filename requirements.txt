@@ -1,0 +1,23 @@
+# backend/requirements.txt
+
+fastapi
+SQLAlchemy
+pydantic>=2.7.0
+pydantic-settings
+passlib[bcrypt]
+python-jose[cryptography]
+uvicorn
+httpx>=0.27.0
+structlog>=24.1.0
+email-validator
+spotipy
+
+# Testing
+pytest-asyncio
+
+# Tambahan untuk Produksi & Task Queue
+gunicorn
+psycopg2-binary
+celery
+redis
+alembic
