@@ -30,9 +30,17 @@ class Settings(BaseSettings):
     # Kredensial Spotify API
     SPOTIFY_CLIENT_ID: str | None = os.getenv("SPOTIFY_CLIENT_ID")
     SPOTIFY_CLIENT_SECRET: str | None = os.getenv("SPOTIFY_CLIENT_SECRET")
-    
+
     # Kredensial OpenRouter AI
     OPENROUTER_API_KEY: str | None = os.getenv("OPENROUTER_API_KEY")
+
+    # Konfigurasi model AI default
+    GENERATOR_MODEL_NAME: str = os.getenv("GENERATOR_MODEL_NAME", "openrouter-default")
+    PLANNER_MODEL_NAME: str = os.getenv("PLANNER_MODEL_NAME", "openrouter-default")
+
+    # Identitas aplikasi untuk permintaan eksternal
+    APP_NAME: str = os.getenv("APP_NAME", PROJECT_NAME)
+    APP_SITE_URL: str = os.getenv("APP_SITE_URL", "http://localhost")
 
     class Config:
         case_sensitive = True
