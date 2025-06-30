@@ -1,0 +1,23 @@
+# .dockerignore
+
+# Git
+.git
+.gitignore
+.dockerignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+*.egg-info/
+.pytest_cache/
+
+# File spesifik OS
+.DS_Store
+
+# File IDE
+.idea/
+.vscode/

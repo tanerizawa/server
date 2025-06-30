@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 app.main:app
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://dear_diary_user:supersecretpassword@db:5432/dear_diary_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENVIRONMENT=production
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - SECRET_KEY=${SECRET_KEY}
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SENTRY_DSN=${SENTRY_DSN}  # ← Tambahan baru untuk integrasi Sentry
+    depends_on:
+      - db
+      - redis
+    # Port tidak diekspos secara langsung karena menggunakan Nginx sebagai reverse proxy
+    # ports:
+    #   - "8000:8000"
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=dear_diary_user
+      - POSTGRES_PASSWORD=supersecretpassword
+      - POSTGRES_DB=dear_diary_db
+    # Tidak perlu mengekspos port DB ke publik untuk keamanan
+    # ports:
+    #   - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  certbot-etc:
+  certbot-var:
