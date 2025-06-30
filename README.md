@@ -26,5 +26,6 @@ gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
 ## Configuration
 
 Copy `.env.example` to `.env` and edit the values before running the server.
-The example lists placeholders for all environment variables (e.g. `DATABASE_URL`,
-`OPENROUTER_API_KEY`, `SPOTIFY_CLIENT_ID`, and `SPOTIFY_CLIENT_SECRET`).
+The repository includes `.env.example` with placeholders for all environment
+variables (e.g. `DATABASE_URL`, `OPENROUTER_API_KEY`, `SPOTIFY_CLIENT_ID`, and
+`SPOTIFY_CLIENT_SECRET`).
