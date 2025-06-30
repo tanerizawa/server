@@ -16,6 +16,16 @@ pip install -r requirements.txt
 > starting Uvicorn. Omitting it can lead to import errors such as
 > `ModuleNotFoundError` if required packages are missing.
 
+### Database setup
+
+Run Alembic migrations and seed the database with sample articles, audio tracks
+and quotes:
+
+```bash
+alembic upgrade head
+python app/db/seed.py
+```
+
 Run the development server from within this directory:
 
 ```bash
