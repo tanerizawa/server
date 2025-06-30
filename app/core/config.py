@@ -1,69 +1,51 @@
 # app/core/config.py
 
 import os
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Muat variabel dari file .env di lingkungan lokal
-load_dotenv()
+# Tentukan path ke file .env. Ini membantu pydantic-settings menemukannya.
+# Di Render, Secret Files akan ditempatkan di root direktori.
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
 
 class Settings(BaseSettings):
-    # Judul dan versi aplikasi
+    # --- Konfigurasi pydantic-settings ---
+    # Ini memberi tahu Pydantic untuk membaca dari file .env DAN dari environment variables.
+    # Variabel lingkungan sistem (seperti yang di-inject oleh Render) akan menimpa nilai dari .env.
+    model_config = SettingsConfigDict(
+        env_file=dotenv_path,
+        env_file_encoding='utf-8',
+        case_sensitive=True,
+        extra='ignore' # Abaikan variabel ekstra yang tidak didefinisikan di model ini
+    )
+
+    # --- Variabel yang Dibutuhkan Aplikasi ---
+
+    # Pengaturan Aplikasi Utama
     PROJECT_NAME: str = "Dear Diary API"
     PROJECT_VERSION: str = "1.0.0"
+    ENVIRONMENT: str = "development" # Default ke development, akan ditimpa di produksi
 
-    # --- Konfigurasi Database (Revisi Kritis) ---
-    # DATABASE_URL sekarang wajib ada di lingkungan. Tidak ada lagi nilai
-    # fallback ke SQLite untuk mencegah kesalahan koneksi di produksi.
+    # Database & Redis - WAJIB ADA
     DATABASE_URL: str
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
 
-    @field_validator("DATABASE_URL")
-    def validate_db_url_is_postgres_in_prod(cls, v: str) -> str:
-        """
-        Validator ini memastikan bahwa di lingkungan produksi (seperti Render),
-        aplikasi HARUS terhubung ke PostgreSQL. Jika tidak, aplikasi akan
-        gagal memulai, yang lebih baik daripada berjalan dengan database yang salah.
-        Render secara otomatis mengatur variabel 'RENDER' menjadi 'true'.
-        """
-        # Periksa apakah variabel RENDER ada untuk mendeteksi lingkungan produksi Render
-        is_production = os.getenv("RENDER") == "true"
-
-        if is_production and not v.startswith("postgresql"):
-            raise ValueError(
-                "Kesalahan Konfigurasi: Di lingkungan produksi, DATABASE_URL harus "
-                "menunjuk ke database PostgreSQL."
-            )
-        return v
-    # --- Akhir Revisi Kritis ---
-
-    # Konfigurasi Redis untuk Celery
-    # Gunakan variabel lingkungan untuk URL Redis, dengan fallback untuk pengembangan lokal
-    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
-    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
-
-    # Kunci rahasia untuk JWT
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "secret_key_default_should_be_changed")
+    # Keamanan - WAJIB ADA
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 hari
 
-    # Kredensial Spotify API
-    SPOTIFY_CLIENT_ID: str | None = os.getenv("SPOTIFY_CLIENT_ID")
-    SPOTIFY_CLIENT_SECRET: str | None = os.getenv("SPOTIFY_CLIENT_SECRET")
+    # Kredensial & Konfigurasi Layanan Eksternal
+    OPENROUTER_API_KEY: str
+    PLANNER_MODEL_NAME: str = "deepseek/deepseek-chat-v3-0324"
+    GENERATOR_MODEL_NAME: str = "deepseek/deepseek-chat-v3-0324"
+    SPOTIFY_CLIENT_ID: str
+    SPOTIFY_CLIENT_SECRET: str
 
-    # Kredensial OpenRouter AI
-    OPENROUTER_API_KEY: str | None = os.getenv("OPENROUTER_API_KEY")
+    # Pengaturan Opsional (Contoh: CORS, Sentry)
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    SENTRY_DSN: str | None = None
 
-    # Konfigurasi model AI default
-    GENERATOR_MODEL_NAME: str = os.getenv("GENERATOR_MODEL_NAME", "openrouter-default")
-    PLANNER_MODEL_NAME: str = os.getenv("PLANNER_MODEL_NAME", "openrouter-default")
 
-    # Identitas aplikasi untuk permintaan eksternal
-    APP_NAME: str = os.getenv("APP_NAME", PROJECT_NAME)
-    APP_SITE_URL: str = os.getenv("APP_SITE_URL", "http://localhost")
-
-    class Config:
-        case_sensitive = True
-
-# Inisialisasi settings. Pydantic akan otomatis menjalankan validasi saat objek ini dibuat.
+# Buat satu instance settings untuk digunakan di seluruh aplikasi
 settings = Settings()

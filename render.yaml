@@ -1,7 +1,6 @@
-# render.yaml - Versi final yang siap untuk di-deploy
+# render.yaml - Versi Final
 
 services:
-  # 1. Layanan Database (Tidak ada perubahan)
   - type: pserv
     name: db
     runtime: postgres
@@ -9,66 +8,30 @@ services:
     postgres:
       version: 15
 
-  # 2. Layanan Redis (Tidak ada perubahan)
   - type: pserv
     name: redis
     runtime: redis
     plan: free
 
-  # 3. Layanan Web (FastAPI) - Telah disesuaikan
   - type: web
     name: web
     runtime: docker
-    repo: https://github.com/tanerizawa/server.git # <-- DISESUAIKAN
+    repo: https://github.com/tanerizawa/server.git
     autoDeploy: true
     healthCheckPath: /docs
-    buildCommand: "./build.sh" # <-- TAMBAHKAN BARIS INI
-    dockerCommand: gunicorn --preload -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT app.main:app # <-- DISESUAIKAN
+    buildCommand: "./build.sh"
+    dockerCommand: "gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT app.main:app"
     envVars:
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: db
-          property: connectionString
-      - key: CELERY_BROKER_URL
-        fromService:
-          type: pserv
-          name: redis
-          property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: pserv
-          name: redis
-          property: connectionString
       - fromGroup: dear-diary-secrets
 
-  # 4. Layanan Worker (Celery) - Telah disesuaikan
   - type: worker
     name: worker
     runtime: docker
-    repo: https://github.com/tanerizawa/server.git # <-- DISESUAIKAN
+    repo: https://github.com/tanerizawa/server.git
     autoDeploy: true
-    dockerCommand: celery -A app.celery_app worker --loglevel=info # <-- DISESUAIKAN
+    dockerCommand: "celery -A app.celery_app worker --loglevel=info"
     envVars:
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: db
-          property: connectionString
-      - key: CELERY_BROKER_URL
-        fromService:
-          type: pserv
-          name: redis
-          property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: pserv
-          name: redis
-          property: connectionString
       - fromGroup: dear-diary-secrets
-# Grup Environment untuk menyimpan semua kunci rahasia kita di satu tempat
+
 envVarGroups:
   - name: dear-diary-secrets
-    # Kita akan mengisi variabel-variabel ini melalui dasbor Render
-    # Ini adalah cara aman untuk mengelola secrets
-    # Contoh: SECRET_KEY, OPENROUTER_API_KEY, dll.
