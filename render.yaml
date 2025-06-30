@@ -1,32 +1,30 @@
-# render.yaml - Master Plan untuk Deploy Aplikasi Dear Diary di Render.com
+# render.yaml - Versi final yang siap untuk di-deploy
 
 services:
-  # 1. Layanan Database PostgreSQL Terkelola
-  # Render akan membuatkan database ini untuk kita.
-  - type: pserv # "pserv" untuk layanan internal seperti database
-    name: db # Nama ini akan menjadi hostname database kita
+  # 1. Layanan Database (Tidak ada perubahan)
+  - type: pserv
+    name: db
     runtime: postgres
-    plan: free # Mulai dengan plan gratis, bisa di-upgrade nanti
+    plan: free
     postgres:
-      version: 15 # Versi PostgreSQL
+      version: 15
 
-  # 2. Layanan Redis Terkelola
-  # Digunakan oleh Celery sebagai broker dan result backend.
+  # 2. Layanan Redis (Tidak ada perubahan)
   - type: pserv
     name: redis
     runtime: redis
     plan: free
 
-  # 3. Layanan Web (Aplikasi FastAPI Anda)
-  # Ini adalah layanan utama yang akan menerima trafik dari internet.
+  # 3. Layanan Web (FastAPI) - Telah disesuaikan
   - type: web
-    name: web # Nama layanan
-    runtime: docker # Kita memberitahu Render untuk membangun dari Dockerfile
-    repo: https://github.com/tanerizawa/server # GANTI DENGAN URL REPO GITHUB ANDA
-    autoDeploy: true # Deploy otomatis setiap kali ada push ke branch utama
-    healthCheckPath: /docs # Render akan memeriksa path ini untuk memastikan aplikasi sehat
+    name: web
+    runtime: docker
+    repo: https://github.com/tanerizawa/server.git # <-- DISESUAIKAN
+    autoDeploy: true
+    healthCheckPath: /docs
+    buildCommand: "./build.sh" # <-- TAMBAHKAN BARIS INI
+    dockerCommand: gunicorn --preload -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT app.main:app # <-- DISESUAIKAN
     envVars:
-      # Variabel lingkungan akan diambil secara otomatis dari layanan lain
       - key: DATABASE_URL
         fromService:
           type: pserv
@@ -42,20 +40,16 @@ services:
           type: pserv
           name: redis
           property: connectionString
-      # Variabel lain akan kita masukkan sebagai Secret File
       - fromGroup: dear-diary-secrets
 
-  # 4. Layanan Worker (Celery Background Task)
-  # Ini berjalan di latar belakang dan tidak terekspos ke internet.
+  # 4. Layanan Worker (Celery) - Telah disesuaikan
   - type: worker
     name: worker
     runtime: docker
-    repo: https://github.com/tanerizawa/server # GANTI DENGAN URL REPO GITHUB ANDA
+    repo: https://github.com/tanerizawa/server.git # <-- DISESUAIKAN
     autoDeploy: true
-    # Perintah untuk menjalankan Celery worker
-    dockerCommand: celery -A app.tasks.celery_app worker --loglevel=info
+    dockerCommand: celery -A app.celery_app worker --loglevel=info # <-- DISESUAIKAN
     envVars:
-      # Worker juga membutuhkan koneksi ke DB dan Redis, sama seperti web
       - key: DATABASE_URL
         fromService:
           type: pserv
@@ -71,9 +65,7 @@ services:
           type: pserv
           name: redis
           property: connectionString
-      # Menggunakan grup secret yang sama dengan layanan web
       - fromGroup: dear-diary-secrets
-
 # Grup Environment untuk menyimpan semua kunci rahasia kita di satu tempat
 envVarGroups:
   - name: dear-diary-secrets

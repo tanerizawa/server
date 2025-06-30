@@ -36,11 +36,8 @@ if SENTRY_DSN:
 # --- Lifespan: Migrasi database saat startup ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Running database migrations...")
-    alembic_cfg_path = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
-    alembic_cfg = Config(alembic_cfg_path)
-    command.upgrade(alembic_cfg, "head")
-    logger.info("Migrations complete.")
+    # Logika migrasi telah dipindahkan ke build.sh
+    logger.info("Application startup...")
     yield
     logger.info("Application shutdown complete.")
 
