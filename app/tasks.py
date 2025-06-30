@@ -18,3 +18,26 @@ def analyze_profile_task(user_id: int):
     finally:
         db.close()
     return f"Profile analysis complete for user_id {user_id}"
+
+import asyncio
+from app.services.quote_generation_service import QuoteGenerationService
+from app.schemas.motivational_quote import MotivationalQuoteCreate
+from app import models
+
+@celery_app.task
+def generate_quote_task():
+    """Generate a motivational quote based on the latest journal mood."""
+    db = SessionLocal()
+    try:
+        latest = db.query(models.Journal).order_by(models.Journal.created_at.desc()).first()
+        mood = latest.mood if latest and latest.mood else "Netral"
+        service = QuoteGenerationService()
+        text, author = asyncio.run(service.generate_quote(mood))
+        if text:
+            crud.motivational_quote.create(
+                db,
+                obj_in=MotivationalQuoteCreate(text=text, author=author),
+            )
+    finally:
+        db.close()
+    return "Quote generation complete"
