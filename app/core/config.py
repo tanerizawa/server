@@ -2,6 +2,7 @@
 
 import os
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from dotenv import load_dotenv
 
 # Muat variabel dari file .env di lingkungan lokal
@@ -12,13 +13,32 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Dear Diary API"
     PROJECT_VERSION: str = "1.0.0"
 
-    # Konfigurasi Database
-    # Gunakan variabel lingkungan untuk URL database, dengan fallback untuk pengembangan lokal
-    # Contoh URL PostgreSQL: postgresql://user:password@host:port/dbname
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+    # --- Konfigurasi Database (Revisi Kritis) ---
+    # DATABASE_URL sekarang wajib ada di lingkungan. Tidak ada lagi nilai
+    # fallback ke SQLite untuk mencegah kesalahan koneksi di produksi.
+    DATABASE_URL: str
+
+    @field_validator("DATABASE_URL")
+    def validate_db_url_is_postgres_in_prod(cls, v: str) -> str:
+        """
+        Validator ini memastikan bahwa di lingkungan produksi (seperti Render),
+        aplikasi HARUS terhubung ke PostgreSQL. Jika tidak, aplikasi akan
+        gagal memulai, yang lebih baik daripada berjalan dengan database yang salah.
+        Render secara otomatis mengatur variabel 'RENDER' menjadi 'true'.
+        """
+        # Periksa apakah variabel RENDER ada untuk mendeteksi lingkungan produksi Render
+        is_production = os.getenv("RENDER") == "true"
+
+        if is_production and not v.startswith("postgresql"):
+            raise ValueError(
+                "Kesalahan Konfigurasi: Di lingkungan produksi, DATABASE_URL harus "
+                "menunjuk ke database PostgreSQL."
+            )
+        return v
+    # --- Akhir Revisi Kritis ---
 
     # Konfigurasi Redis untuk Celery
-    # Gunakan variabel lingkungan untuk URL Redis
+    # Gunakan variabel lingkungan untuk URL Redis, dengan fallback untuk pengembangan lokal
     CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
     CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 
@@ -44,17 +64,6 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
-        # Jika menggunakan Pydantic v1, gunakan:
-        # env_file = ".env"
-        # env_file_encoding = 'utf-8'
 
+# Inisialisasi settings. Pydantic akan otomatis menjalankan validasi saat objek ini dibuat.
 settings = Settings()
-
-# Validasi sederhana saat startup
-# Pastikan kunci penting ada di lingkungan produksi
-# Anda dapat menambahkan validasi yang lebih ketat di sini
-def check_production_settings():
-    if not settings.DATABASE_URL.startswith("postgresql"):
-        print("PERINGATAN: DATABASE_URL tidak disetel untuk PostgreSQL. Ini tidak ideal untuk produksi.")
-    if settings.SECRET_KEY == "secret_key_default_should_be_changed":
-        print("PERINGATAN: SECRET_KEY menggunakan nilai default. HARAP UBAH di lingkungan produksi.")
