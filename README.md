@@ -21,7 +21,7 @@ Run the development server from within this directory:
 ```bash
 uvicorn app.main:app --reload
 ```
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+gunicorn --preload -w 4 -k uvicorn.workers.UvicornWorker app.main:app
 
 ## Configuration
 
