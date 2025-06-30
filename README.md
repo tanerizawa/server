@@ -29,3 +29,14 @@ Copy `.env.example` to `.env` and edit the values before running the server.
 The repository includes `.env.example` with placeholders for all environment
 variables (e.g. `DATABASE_URL`, `OPENROUTER_API_KEY`, `SPOTIFY_CLIENT_ID`, and
 `SPOTIFY_CLIENT_SECRET`).
+
+## Background tasks
+
+Motivational quotes are generated automatically using Celery. Ensure Redis is running and start the worker and beat processes alongside Uvicorn:
+
+```bash
+celery -A app.celery_app.celery_app worker --loglevel=info
+celery -A app.celery_app.celery_app beat --loglevel=info
+```
+
+The scheduled task `generate_quote_task` runs every 15 minutes and inserts a new quote based on recent journal moods.

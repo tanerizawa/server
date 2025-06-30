@@ -13,3 +13,11 @@ celery_app = Celery(
     backend=redis_url,
     include=["app.tasks"] # Tunjuk ke file tempat task didefinisikan
 )
+
+celery_app.conf.beat_schedule = {
+    "generate-quote": {
+        "task": "app.tasks.generate_quote_task",
+        "schedule": 60 * 15,
+    }
+}
+celery_app.conf.timezone = "UTC"
