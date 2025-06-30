@@ -20,8 +20,10 @@ Run the development server from within this directory:
 
 ```bash
 uvicorn app.main:app --reload
-```
+
+# For production
 gunicorn --preload -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+```
 
 ## Configuration
 
@@ -40,3 +42,9 @@ celery -A app.celery_app.celery_app beat --loglevel=info
 ```
 
 The scheduled task `generate_quote_task` runs every 15 minutes and inserts a new quote based on recent journal moods.
+
+## Deployment on Render
+
+The `render.yaml` file provisions the services required to run the API on [Render](https://render.com/): a Postgres database, a Redis instance, the FastAPI web service and a Celery worker. Connect your GitHub repository on Render and it will automatically create these resources.
+
+Secrets referenced in `render.yaml` should be stored in the environment group `dear-diary-secrets`. During each deploy Render executes `build.sh` which installs dependencies and applies Alembic migrations.
