@@ -9,9 +9,9 @@ WORKDIR /app
 
 # 3. Tetapkan variabel lingkungan
 # Mencegah Python menulis file .pyc untuk menjaga image tetap bersih
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 # Memastikan output dari Python tidak di-buffer, sehingga log langsung terlihat
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # 4. Instal dependensi sistem jika ada (saat ini tidak ada, tapi ini tempatnya)
 # RUN apt-get update && apt-get install -y ...
