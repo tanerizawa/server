@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Dear Diary API"
     PROJECT_VERSION: str = "1.0.0"
     ENVIRONMENT: str = "development" # Default ke development, akan ditimpa di produksi
+    APP_NAME: str = "Dear Diary API"
+    APP_SITE_URL: str = "http://localhost"
 
     # Database & Redis - WAJIB ADA
     DATABASE_URL: str
@@ -36,7 +38,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 hari
 
     # Kredensial & Konfigurasi Layanan Eksternal
-    OPENROUTER_API_KEY: str
+    OPENROUTER_API_KEY: str | None = None
     PLANNER_MODEL_NAME: str = "deepseek/deepseek-chat-v3-0324"
     GENERATOR_MODEL_NAME: str = "deepseek/deepseek-chat-v3-0324"
     SPOTIFY_CLIENT_ID: str
