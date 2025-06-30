@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 app.main:app
+    command: gunicorn --preload -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 app.main:app
     volumes:
       - .:/app
     environment:

@@ -33,4 +33,4 @@ EXPOSE 8000
 # 8. Jalankan aplikasi saat kontainer dimulai
 # Perintah ini sama dengan yang kita bahas di Langkah 1, tapi untuk dijalankan di dalam kontainer
 # Mengikat ke 0.0.0.0 agar dapat diakses dari luar kontainer
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "app.main:app"]
+CMD ["gunicorn", "--preload", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "app.main:app"]
